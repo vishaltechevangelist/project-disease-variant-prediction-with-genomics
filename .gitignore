@@ -4,3 +4,9 @@ data/.DS_Store
 notebooks/.DS_Store
 model.png
 data/
+.streamlit
+.env
+summarize.py
+test.py
+error.log
+feature_metadata.py

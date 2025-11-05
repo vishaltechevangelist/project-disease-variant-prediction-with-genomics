@@ -8,6 +8,11 @@ from dotenv import load_dotenv
 import dspy
 import json
 import os
+import re
+import logging
+
+logging.basicConfig(filename="error.log", level=logging.ERROR)
+logger = logging.getLogger(__name__)
 
 # ----------------- CONFIG -----------------
 MODEL_PATH = "models/xgb_model.joblib"  # change if different
@@ -22,10 +27,10 @@ FEATURE_COLUMNS = [
 
 # sensible defaults taken from the sample you provided (first row)
 UI_DEFAULTS = {
-    "Chromosome_Encoded": 1,
+    "Chromosome_Encoded": 3,
     "Clinical_Review_Status_Encoded": 1,
-    "Gene_Symbol_Encoded": 1,
-    "POS_Percentile": 12.0,
+    "Gene_Symbol_Encoded": 3969,
+    "POS_Percentile": 0.888870,
     "IS_SNP": 0,
     "IS_INDEL": 1,
 }
@@ -83,8 +88,6 @@ if submit_single:
         with open(filename, 'r') as f:
             map_list[map_name] = json.load(f)
 
-    signature = "input_features -> model_output_prediction_with_explanation"
-
     try:
         X = pd.DataFrame([ui_vals], columns=FEATURE_COLUMNS)
         st.write("Input data:")
@@ -100,13 +103,11 @@ if submit_single:
             out["Clinical_Significance"] = [key for key, value in map_list['sig_label_map'].items() if value == pred]
             if proba is not None:
                 out["prob_max"] = proba.max(axis=1)
-            
-            load_dotenv()
-            llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=os.getenv("GOOGLE_API_KEY"))
-            dspy.settings.configure(lm=llm)
 
-            gemini_model = dspy.ChainOfThought(signature=signature, expose_cot=False)
+            st.success("Prediction complete")
+            st.dataframe(out)
 
+            signature = "input_features -> model_output_prediction_with_explanation"
             instruction_block = """
                 You are an expert genomic interpreter who explains model results in simple, layman-friendly language.
 
@@ -126,13 +127,11 @@ if submit_single:
                 5. Output a JSON object with **exactly three fields**:
                     {
                     "user_facing_summary": "<short paragraph>",
-                    "why_simple_bullets": ["<bullet1>", "<bullet2>"],
+                    "why": ["<bullet1>", "<bullet2>"],
                     "next_step": "<one closing sentence>"
                     }
-                """
-
-            # gemini_model.set_instructions(instruction_block)
-
+                """            
+            
             input_to_llm = {   
                 "instruction_block" : instruction_block,
                 "Clinical_Significance": out["Clinical_Significance"].iloc[0],
@@ -145,15 +144,23 @@ if submit_single:
                 "prediction_label" : out["Clinical_Significance"].iloc[0],
                 "confidence" : float(out["prob_max"].iloc[0])
             }
+    
+            # load_dotenv()
+            # llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=os.getenv("GOOGLE_API_KEY"))
 
+            llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=st.secrets["GOOGLE_API_KEY"])
+            dspy.settings.configure(lm=llm)
+
+            gemini_model = dspy.ChainOfThought(signature=signature, expose_cot=False)
             result = gemini_model(input_features=json.dumps(input_to_llm))
-            print(result)
+        
+            clean_json_str = json.loads(re.sub(r'```json|```', '', result.model_output_prediction_with_explanation).strip())
+            str_to_display = clean_json_str['user_facing_summary'] + '\n\t' + clean_json_str['why'][0] + '\n\t' + clean_json_str['why'][1] + '\n' + clean_json_str['next_step']
+            st.info(str_to_display)
 
-            st.success("Prediction complete")
-            st.dataframe(out)
-            st.info(result.model_output_prediction_with_explanation)
-            csv = out.to_csv(index=False)
     except Exception as e:
-        st.error(f"Prediction failed: {e}")
+        logger.exception("Error occurred: %s", e, exc_info=True)
+        st.error("An unexpected error occurred. Check error.log for details.")
+
 
 st.markdown("---")
