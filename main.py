@@ -2,14 +2,10 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib
+import joblib, dspy, json, os, re, logging, io, sys, traceback
 
-# from dotenv import load_dotenv
-import dspy
-import json
-import os
-import re
-import logging
+log_capture = io.StringIO()
+sys.stdout = log_capture
 
 logging.basicConfig(filename="error.log", level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -150,7 +146,7 @@ if submit_single:
 
             llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=st.secrets["GOOGLE_API_KEY"])
             dspy.settings.configure(lm=llm)
-
+            dspy.settings.configure(lm=llm)
             gemini_model = dspy.ChainOfThought(signature=signature, expose_cot=False)
             result = gemini_model(input_features=json.dumps(input_to_llm))
         
@@ -160,4 +156,7 @@ if submit_single:
 
     except Exception as e:
         logger.exception("Error occurred: %s", e, exc_info=True)
-        st.error("An unexpected error occurred. Check error.log for details.")
+        trace_str = traceback.format_exc()
+        st.error(f"An error occurred: {e}")
+        st.text_area("Detailed Traceback:", trace_str, height=200)
+        
