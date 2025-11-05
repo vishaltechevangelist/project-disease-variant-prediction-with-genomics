@@ -2,10 +2,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib, dspy, json, os, re, logging, io, sys, traceback
-
-log_capture = io.StringIO()
-sys.stdout = log_capture
+import joblib, dspy, json, os, re, logging, traceback
 
 logging.basicConfig(filename="error.log", level=logging.ERROR)
 logger = logging.getLogger(__name__)
