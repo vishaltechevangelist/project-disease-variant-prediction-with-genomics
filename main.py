@@ -35,8 +35,8 @@ UI_DEFAULTS = {
     "IS_INDEL": 1,
 }
 
-st.set_page_config(page_title="Genomics Predictor — Form Inputs", layout="wide")
-st.title("Genomics Predictor — Form Inputs")
+st.set_page_config(page_title="Disease Predictor from Genomics Change", layout="wide")
+st.title("Disease Predictor from Genomics Change")
 
 @st.cache_resource
 def load_model(path=MODEL_PATH):
@@ -53,7 +53,7 @@ if model is None:
     # still allow UI building for testing
 
 # --------- Single-sample form ----------
-st.header("Sample input")
+st.header("Sample input features")
 with st.form("single_form"):
     cols = st.columns(2)
     ui_vals = {}
@@ -161,6 +161,3 @@ if submit_single:
     except Exception as e:
         logger.exception("Error occurred: %s", e, exc_info=True)
         st.error("An unexpected error occurred. Check error.log for details.")
-
-
-st.markdown("---")
