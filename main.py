@@ -40,6 +40,16 @@ def load_model(path=MODEL_PATH):
         st.error(f"Failed to load model from {path}: {e}")
         return None
 
+@st.cache_resource
+def get_configured_dspy_llm():
+    try:
+        llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=st.secrets["GOOGLE_API_KEY"])
+        dspy.settings.configure(lm=llm)
+    except Exception as e:
+        logger.exception("Error occurred: %s", e, exc_info=True)
+        st.error(f"An error occurred: {e}")
+    return llm
+
 model = load_model()
 if model is None:
     st.warning("Model not loaded. Place model at 'models/xgb_model.joblib' or update MODEL_PATH.")
@@ -141,8 +151,7 @@ if submit_single:
             # load_dotenv()
             # llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=os.getenv("GOOGLE_API_KEY"))
 
-            llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=st.secrets["GOOGLE_API_KEY"])
-            dspy.settings.configure(lm=llm)
+            llm = get_configured_dspy_llm()
             gemini_model = dspy.ChainOfThought(signature=signature, expose_cot=False)
             result = gemini_model(input_features=json.dumps(input_to_llm))
         
