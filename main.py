@@ -93,8 +93,6 @@ if submit_single:
 
     try:
         X = pd.DataFrame([ui_vals], columns=FEATURE_COLUMNS)
-        st.write("Input data:")
-        st.dataframe(X)
         
         if model is None:
             st.info("No model loaded — showing input only.")
@@ -107,7 +105,9 @@ if submit_single:
             if proba is not None:
                 out["prob_max"] = proba.max(axis=1)
 
-            st.success("Prediction complete")
+            st.markdown('---')
+            st.header("Output")
+            st.success("Prediction completed Using XGBoostClassifier")
             st.dataframe(out)
 
             signature = "input_features -> model_output_prediction_with_explanation"
@@ -156,12 +156,16 @@ if submit_single:
             result = gemini_model(input_features=json.dumps(input_to_llm))
         
             clean_json_str = json.loads(re.sub(r'```json|```', '', result.model_output_prediction_with_explanation).strip())
-            str_to_display = clean_json_str['user_facing_summary'] + '\n\t' + clean_json_str['why'][0] + '\n\t' + clean_json_str['why'][1] + '\n' + clean_json_str['next_step']
-            st.info(str_to_display)
+            str_to_display = "<u>Human understanding text from gemini llm using dspy</u><br/>"
+            str_to_display = str_to_display + clean_json_str['user_facing_summary'] + '<br/>' 
+            str_to_display = str_to_display + clean_json_str['why'][0] + '<br/>' + clean_json_str['why'][1] + '<br/>' + clean_json_str['next_step']
+            str_to_display = '<div style="background-color:#2b6cb0;color:white;border-left:6px solid #2196F3;padding:10px 16px;border-radius:8px;">' + str_to_display + '</div>'
+            st.markdown(f"""{str_to_display}""", unsafe_allow_html=True)
 
     except Exception as e:
         logger.exception("Error occurred: %s", e, exc_info=True)
         trace_str = traceback.format_exc()
         st.error(f"An error occurred: {e}")
         st.text_area("Detailed Traceback:", trace_str, height=200)
+
         
