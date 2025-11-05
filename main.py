@@ -8,6 +8,40 @@ from dotenv import load_dotenv
 import dspy
 import json
 import os
+import re
+import logging
+
+logging.basicConfig(filename="error.log", level=logging.ERROR)
+logger = logging.getLogger(__name__)
+
+load_dotenv()
+llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=os.getenv("GOOGLE_API_KEY"))
+dspy.settings.configure(lm=llm)
+signature = "input_features -> model_output_prediction_with_explanation"
+
+instruction_block = """
+                You are an expert genomic interpreter who explains model results in simple, layman-friendly language.
+
+                ### GOAL
+                Given model inputs describing a DNA variant and its predicted clinical significance, produce a short, clear, and friendly explanation that any educated person without genetics training can understand.
+                ---
+                ### STYLE RULES
+                1. Start with a **short summary (1–2 sentences)** that tells what the model predicts (e.g., 'likely harmless', 'potentially disease-causing') and how confident it is (convert numeric confidence into plain terms: low, moderate, high).
+                2. Then add **2 bullet points** (each one short sentence) that explain *why* in everyday terms:
+                    - Mention whether it’s a **single-letter change (SNP)** or **insertion/deletion (INDEL)**.
+                    - Mention what the **position percentile** and **review status** imply (e.g., “well-studied region” or “limited expert review”).
+                    - Explain only from the provided data — do **not invent** new biology facts.
+                3. End with a **single closing sentence** suggesting a non-prescriptive next step, such as:
+                    - “If you are concerned, you can share this report with a clinician.”
+                    - “This result is mostly reassuring but always best discussed with a professional.”
+                4. Use a warm, informative tone — short words, active voice, no jargon.
+                5. Output a JSON object with **exactly three fields**:
+                    {
+                    "user_facing_summary": "<short paragraph>",
+                    "why": ["<bullet1>", "<bullet2>"],
+                    "next_step": "<one closing sentence>"
+                    }
+                """
 
 # ----------------- CONFIG -----------------
 MODEL_PATH = "models/xgb_model.joblib"  # change if different
@@ -22,10 +56,10 @@ FEATURE_COLUMNS = [
 
 # sensible defaults taken from the sample you provided (first row)
 UI_DEFAULTS = {
-    "Chromosome_Encoded": 1,
+    "Chromosome_Encoded": 3,
     "Clinical_Review_Status_Encoded": 1,
-    "Gene_Symbol_Encoded": 1,
-    "POS_Percentile": 12.0,
+    "Gene_Symbol_Encoded": 3969,
+    "POS_Percentile": 0.888870,
     "IS_SNP": 0,
     "IS_INDEL": 1,
 }
@@ -83,7 +117,7 @@ if submit_single:
         with open(filename, 'r') as f:
             map_list[map_name] = json.load(f)
 
-    signature = "input_features -> model_output_prediction_with_explanation"
+    
 
     try:
         X = pd.DataFrame([ui_vals], columns=FEATURE_COLUMNS)
@@ -101,38 +135,7 @@ if submit_single:
             if proba is not None:
                 out["prob_max"] = proba.max(axis=1)
             
-            load_dotenv()
-            llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=os.getenv("GOOGLE_API_KEY"))
-            dspy.settings.configure(lm=llm)
-
-            gemini_model = dspy.ChainOfThought(signature=signature, expose_cot=False)
-
-            instruction_block = """
-                You are an expert genomic interpreter who explains model results in simple, layman-friendly language.
-
-                ### GOAL
-                Given model inputs describing a DNA variant and its predicted clinical significance, produce a short, clear, and friendly explanation that any educated person without genetics training can understand.
-                ---
-                ### STYLE RULES
-                1. Start with a **short summary (1–2 sentences)** that tells what the model predicts (e.g., 'likely harmless', 'potentially disease-causing') and how confident it is (convert numeric confidence into plain terms: low, moderate, high).
-                2. Then add **2 bullet points** (each one short sentence) that explain *why* in everyday terms:
-                    - Mention whether it’s a **single-letter change (SNP)** or **insertion/deletion (INDEL)**.
-                    - Mention what the **position percentile** and **review status** imply (e.g., “well-studied region” or “limited expert review”).
-                    - Explain only from the provided data — do **not invent** new biology facts.
-                3. End with a **single closing sentence** suggesting a non-prescriptive next step, such as:
-                    - “If you are concerned, you can share this report with a clinician.”
-                    - “This result is mostly reassuring but always best discussed with a professional.”
-                4. Use a warm, informative tone — short words, active voice, no jargon.
-                5. Output a JSON object with **exactly three fields**:
-                    {
-                    "user_facing_summary": "<short paragraph>",
-                    "why_simple_bullets": ["<bullet1>", "<bullet2>"],
-                    "next_step": "<one closing sentence>"
-                    }
-                """
-
-            # gemini_model.set_instructions(instruction_block)
-
+            
             input_to_llm = {   
                 "instruction_block" : instruction_block,
                 "Clinical_Significance": out["Clinical_Significance"].iloc[0],
@@ -145,15 +148,17 @@ if submit_single:
                 "prediction_label" : out["Clinical_Significance"].iloc[0],
                 "confidence" : float(out["prob_max"].iloc[0])
             }
-
+    
+            gemini_model = dspy.ChainOfThought(signature=signature, expose_cot=False)
             result = gemini_model(input_features=json.dumps(input_to_llm))
-            print(result)
-
             st.success("Prediction complete")
             st.dataframe(out)
-            st.info(result.model_output_prediction_with_explanation)
-            csv = out.to_csv(index=False)
+            clean_json_str = json.loads(re.sub(r'```json|```', '', result.model_output_prediction_with_explanation).strip())
+            str_to_display = clean_json_str['user_facing_summary'] + '\n\t' + clean_json_str['why'][0] + '\n\t' + clean_json_str['why'][1] + '\n' + clean_json_str['next_step']
+            st.info(str_to_display)
     except Exception as e:
-        st.error(f"Prediction failed: {e}")
+        logger.exception("Error occurred: %s", e, exc_info=True)
+        st.error("An unexpected error occurred. Check error.log for details.")
+
 
 st.markdown("---")
