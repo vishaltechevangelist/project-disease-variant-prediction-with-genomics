@@ -146,7 +146,6 @@ if submit_single:
 
             llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=st.secrets["GOOGLE_API_KEY"])
             dspy.settings.configure(lm=llm)
-            dspy.settings.configure(lm=llm)
             gemini_model = dspy.ChainOfThought(signature=signature, expose_cot=False)
             result = gemini_model(input_features=json.dumps(input_to_llm))
         
