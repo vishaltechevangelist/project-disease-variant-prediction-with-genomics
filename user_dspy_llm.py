@@ -1,5 +1,23 @@
-import json
+import json, threading
+
 class user_dspy_llm():
+    # _lock = threading.Lock()
+    # _configured = False
+    # _lm = None
+
+    # @classmethod
+    # def configure_once(cls, dspy, lmname, api_key, **kw):
+    #     if cls._configured:
+    #         return cls._lm
+    #     with cls._lock:
+    #         if cls._configured:
+    #             return cls._lm
+    #         lm = dspy.LM(model=lmname, api_key=api_key, **kw)
+    #         dspy.settings.configure(lm=lm)
+    #         cls._lm = lm
+    #         cls._configured = True
+    #         return lm
+
     def __init__(self, dspy, lmname, lm_api_key, signature="input->output", instruction = ""):
         self.lmname = lmname
         self.lm_api_key = lm_api_key

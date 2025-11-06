@@ -71,7 +71,7 @@ if submit_btn:
             if probabilities is not None:
                 display_df[config.__PROBABILITY__] = probabilities.max(axis=1)
             st.success(config.MESSAGE['PREDICTION_SUCCESS'])
-            st.dataframe(display_df.T)
+            st.dataframe(display_df.T.astype(str))
 
             ##** dspy integration **##
             dspy_config = config.dspy_config
