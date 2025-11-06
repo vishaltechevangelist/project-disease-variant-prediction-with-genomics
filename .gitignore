@@ -11,3 +11,5 @@ test.py
 error.log
 feature_metadata.py
 main_ui_sidebar.py
+__pycache__/
+
