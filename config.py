@@ -96,5 +96,6 @@ dspy_config = {
                     - “If you are concerned, you can share this report with a clinician.”
                     - “This result is mostly reassuring but always best discussed with a professional.”
                 4. Use a warm, informative tone — short words, active voice, no jargon.
+                5. Output text contains short paragraph for user then why in bullets section and then next step having suggestion
                 """,
 }
