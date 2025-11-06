@@ -26,6 +26,7 @@ class user_dspy_llm():
         self.instruction = {'instruction': instruction}
     
     def dspy_configure_lm(self):
+        '''This function is not thread safe, cause error'''
         try:
             lm = self.dspy.LM(model=self.lmname, api_key=self.lm_api_key)
             self.dspy.settings.configure(lm=lm)

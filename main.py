@@ -29,6 +29,16 @@ def load_model(path=config.__MODEL_PATH__, model_file_name=config.__MODEL_FILE_N
     except Exception as e:
         st.error(config.MESSAGE['MODEL_NOT_LOADED'])
         return None
+
+@st.cache_resource
+def get_configured_dspy_llm():
+    try:
+        llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=st.secrets["GOOGLE_API_KEY"])
+        dspy.settings.configure(lm=llm)
+    except Exception as e:
+        logger.exception("Error occurred: %s", e, exc_info=True)
+        st.error(f"An error occurred: {e}")
+    return llm
     
 with st.sidebar.form(config.FORM_NAME, width=500):
     ui_vals = {}
@@ -77,7 +87,8 @@ if submit_btn:
             dspy_config = config.dspy_config
             user_dspy_llm = user_dspy_llm(dspy=dspy, lmname=dspy_config['LM_NAME'], lm_api_key=st.secrets[dspy_config['LM_KEY_NAME']], 
                                           signature=dspy_config['SIGNATURE'], instruction = dspy_config['LLM_ROLE_GOAL_INSTRUCTION'])
-            user_dspy_llm.dspy_configure_lm()
+            llm = get_configured_dspy_llm()
+            # user_dspy_llm.dspy_configure_lm()
             output_explanation = user_dspy_llm.get_prediction_explanation(df_to_json(display_df))
             st.markdown(format_output(output_explanation), unsafe_allow_html=True)
 
