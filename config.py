@@ -25,34 +25,40 @@ __NUMBER__ = 'NUMBER'
 FEATURE_COLUMNS_DEFAULTS = {
     "Chromosome_Encoded": {
         'label': 'Chromosome & their Id',
+        'out_df_label': 'Chromosome',
         'type': __SELECT__,
         'map_name' : 'chrom_map',
         'default': 3
     },
     "Clinical_Review_Status_Encoded": {
         'label': 'Clinical Review Status & their Id',
+        'out_df_label': 'Clinical Review Status',
         'type': __SELECT__,
         'map_name' : 'review_map',    
         'default' : 1
     },                   
     "Gene_Symbol_Encoded": {
         'label': 'Gene Symbol & their Id',
+        'out_df_label': 'Gene Symbol',
         'type': __SELECT__,
         'map_name':'gene_id_map',
         'default':3969
     },
     "POS_Percentile": {
         'label': 'Position of change',
+        'out_df_label': 'Position of change',
         'type': __NUMBER__,
         'default': 0.888870
     },
     "IS_SNP": {
         'label': 'Single Nucleotide Change (IS_SNP)',
+        'out_df_label': 'Single Nucleotide Change',
         'type': __CHECKBOX__,
         'default': 0
     },
     "IS_INDEL": {
         'label': 'Insertion or Deletion (IS_INDEL)',
+        'out_df_label': 'Nucleotide Insertion or Deletion',
         'type': __CHECKBOX__,
         'default': 1
     }
@@ -83,8 +89,8 @@ MODEL_LIST = {
 
 '''Prediction label added to model output dataframe'''
 __PREDICTION__ = 'Prediction'
-__CLINICAL_SIGNIFIANCE__ =  'Clinical_Significance'
-__PROBABILITY__ = 'Proba_Max'
+__CLINICAL_SIGNIFIANCE__ =  'Clinical Significance'
+__PROBABILITY__ = 'Confidence'
 
 '''dspy configuration'''
 dspy_config = {
