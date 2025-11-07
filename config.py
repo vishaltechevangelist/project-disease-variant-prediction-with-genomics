@@ -24,19 +24,19 @@ __CHECKBOX__ = 'CHECKBOX'
 __NUMBER__ = 'NUMBER'
 FEATURE_COLUMNS_DEFAULTS = {
     "Chromosome_Encoded": {
-        'label': 'Chromosome - Id',
+        'label': 'Chromosome & their Id',
         'type': __SELECT__,
         'map_name' : 'chrom_map',
         'default': 3
     },
     "Clinical_Review_Status_Encoded": {
-        'label': 'Clinical Review Status - Id',
+        'label': 'Clinical Review Status & their Id',
         'type': __SELECT__,
         'map_name' : 'review_map',    
         'default' : 1
     },                   
     "Gene_Symbol_Encoded": {
-        'label': 'Gene Symbol - Id',
+        'label': 'Gene Symbol & their Id',
         'type': __SELECT__,
         'map_name':'gene_id_map',
         'default':3969
