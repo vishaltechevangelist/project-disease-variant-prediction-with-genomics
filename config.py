@@ -71,7 +71,7 @@ FORM_NAME = 'genetic_input_feature'
 MESSAGE = {
     'MODEL_NOT_LOADED' : f'Model not loaded. Place model at "{__MODEL_PATH__}/xgb_model.joblib" or update __MODEL_PATH__ in config',
     'PREDICTION_SUCCESS' : 'Prediction completed using ',
-    'HEADING_FOR_LLMTEXT' : 'Human understanding text from gemini llm using dspy',
+    'HEADING_FOR_LLMTEXT' : 'Explanation (Gemini via DSPy)',
 }
 
 MODEL_LIST = {

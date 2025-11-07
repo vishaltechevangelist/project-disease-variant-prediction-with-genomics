@@ -102,6 +102,7 @@ if submit_btn:
             llm = get_configured_dspy_llm()
             # user_dspy_llm.dspy_configure_lm()
             output_explanation = user_dspy_llm.get_prediction_explanation(df_to_json(display_df))
+            st.subheader(config.MESSAGE['HEADING_FOR_LLMTEXT'])
             st.markdown(format_output(output_explanation), unsafe_allow_html=True)
 
     except Exception as e:
