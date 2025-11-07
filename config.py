@@ -24,19 +24,19 @@ __CHECKBOX__ = 'CHECKBOX'
 __NUMBER__ = 'NUMBER'
 FEATURE_COLUMNS_DEFAULTS = {
     "Chromosome_Encoded": {
-        'label': 'Select Chromosome',
+        'label': 'Chromosome & their Id',
         'type': __SELECT__,
         'map_name' : 'chrom_map',
         'default': 3
     },
     "Clinical_Review_Status_Encoded": {
-        'label': 'Clinical Review Status',
+        'label': 'Clinical Review Status & their Id',
         'type': __SELECT__,
         'map_name' : 'review_map',    
         'default' : 1
     },                   
     "Gene_Symbol_Encoded": {
-        'label': 'Gene Symbol',
+        'label': 'Gene Symbol & their Id',
         'type': __SELECT__,
         'map_name':'gene_id_map',
         'default':3969
@@ -64,10 +64,22 @@ FORM_NAME = 'genetic_input_feature'
 
 MESSAGE = {
     'MODEL_NOT_LOADED' : f'Model not loaded. Place model at "{__MODEL_PATH__}/xgb_model.joblib" or update __MODEL_PATH__ in config',
-    'PREDICTION_SUCCESS' : 'Prediction completed Using XGBoostClassifier',
+    'PREDICTION_SUCCESS' : 'Prediction completed using ',
     'HEADING_FOR_LLMTEXT' : 'Human understanding text from gemini llm using dspy',
 }
 
+MODEL_LIST = {
+       1: {
+           'name' : 'Random Forest',
+           'model_name': 'rft_model.joblib',
+           'accuracy' :  'Has Acc: 58%'
+       },
+       2: {
+            'name' : 'XGBoost',
+            'model_name' : 'xgb_model.joblib',
+            'accuracy' : 'Has Acc: 64%'
+        }
+}
 
 '''Prediction label added to model output dataframe'''
 __PREDICTION__ = 'Prediction'

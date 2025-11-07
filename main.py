@@ -54,8 +54,12 @@ with st.sidebar.form(config.FORM_NAME, width=500):
             encoded_vals[feature_name] = ui_vals[feature_name] = st.checkbox(label=label, value=bool(feature_maps['default']))
         elif feature_maps['type'] == config.__NUMBER__:
             encoded_vals[feature_name] = ui_vals[feature_name] = st.number_input(label=label, value=float(feature_maps['default']), format="%.6f")
+    
+    model_maps = config.MODEL_LIST
+    selected_model = st.selectbox(label='Select Model', options=list(config.MODEL_LIST.keys()), key='sel_model', 
+                                  format_func= lambda x : f"{x}. {model_maps[x]['name']} ({model_maps[x]['accuracy']})"
+                                  )
     submit_btn = st.form_submit_button("Get Prediction")
-
 
 if submit_btn:
     try:
@@ -68,7 +72,8 @@ if submit_btn:
         # st.dataframe(encoded_df)
 
         ##** Classifier Model Integration **##
-        classifier_model = load_model()
+        
+        classifier_model = load_model(path=config.__MODEL_PATH__, model_file_name=config.MODEL_LIST[selected_model]['model_name'])
         if classifier_model is None:
             raise Exception(config.MESSAGE['MODEL_NOT_LOADED'])
         else:
@@ -80,7 +85,7 @@ if submit_btn:
             display_df[config.__CLINICAL_SIGNIFIANCE__] = [key for key, value in label_map.items() if value == prediction]
             if probabilities is not None:
                 display_df[config.__PROBABILITY__] = probabilities.max(axis=1)
-            st.success(config.MESSAGE['PREDICTION_SUCCESS'])
+            st.success(f"{config.MESSAGE['PREDICTION_SUCCESS']} {config.MODEL_LIST[selected_model]['name']} model")
             st.dataframe(display_df.T.astype(str))
 
             ##** dspy integration **##
