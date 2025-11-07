@@ -72,19 +72,26 @@ if submit_btn:
         # st.dataframe(encoded_df)
 
         ##** Classifier Model Integration **##
-        
         classifier_model = load_model(path=config.__MODEL_PATH__, model_file_name=config.MODEL_LIST[selected_model]['model_name'])
         if classifier_model is None:
             raise Exception(config.MESSAGE['MODEL_NOT_LOADED'])
         else:
             prediction = classifier_model.predict(X)
             probabilities = classifier_model.predict_proba(X) if hasattr(classifier_model, "predict_proba") else None
+            
             display_df = ui_df.copy()
+            rename_col = {}
+            for col in display_df.columns:
+                rename_col[col] = config.FEATURE_COLUMNS_DEFAULTS[col]['out_df_label']
+
+            display_df.rename(columns=rename_col, inplace=True)
             display_df[config.__PREDICTION__] = prediction
             label_map = config.json_maps['sig_label_map']
             display_df[config.__CLINICAL_SIGNIFIANCE__] = [key for key, value in label_map.items() if value == prediction]
+            
             if probabilities is not None:
                 display_df[config.__PROBABILITY__] = probabilities.max(axis=1)
+
             st.success(f"{config.MESSAGE['PREDICTION_SUCCESS']} {config.MODEL_LIST[selected_model]['name']} model")
             st.dataframe(display_df.T.astype(str))
 
