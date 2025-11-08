@@ -42,9 +42,10 @@ def get_configured_dspy_llm():
         st.error(f"An error occurred: {e}")
     return llm
 
-chromo_id_label_dd = load_json_for_dd(config.__DD_JSON__, config.__CHROMO_ID_LABEL_FILE__)
-chromo_gene_map = load_json_for_dd(config.__DD_JSON__, config.__CHROMO_GENE_MAP_FILE__)
-gene_id_label_dd = load_json_for_dd(config.__DD_JSON__, config.__GENE_ID_LABEL_FILE__)
+chromo_id_label_dd = config.json_maps['chromo_id_label_dd']
+chromo_gene_map = config.json_maps['chromo_gene_map']
+gene_id_label_dd = config.json_maps['gene_id_label_dd']
+sig_label_map = config.json_maps['sig_label_map']
 
 if 'Chromosome_Encoded' not in st.session_state:
         st.session_state['Chromosome_Encoded'] = config.__FEATURE_COLUMNS_DEFAULTS__['Chromosome_Encoded']['default']
@@ -66,7 +67,7 @@ with st.sidebar:
 with st.sidebar.form(config.__FORM_NAME__, width=500):
 # with st.form(config.__FORM_NAME__, width=500):
    
-    print(f"chromsome state = {st.session_state['Chromosome_Encoded']}")
+    # print(f"chromsome state = {st.session_state['Chromosome_Encoded']}")
     # gene_dd_option_list = chromo_gene_map[ui_vals['Chromosome_Encoded']]
     gene_dd_option_list = chromo_gene_map[str(st.session_state['Chromosome_Encoded'])]
     # print(gene_dd_option_list)
@@ -76,12 +77,10 @@ with st.sidebar.form(config.__FORM_NAME__, width=500):
     for num in gene_dd_option_list:
         gene_dd_option.append(str(num))
     # print(st.session_state['Chromosome_Encoded'])
-    print(type(gene_dd_option))
-    print(type(gene_id_label_dd[gene_dd_option[0]]))
-    ui_vals['Gene_Symbol_Encoded'] = st.selectbox('Select Gene:', options=gene_dd_option, 
-                                                      key='Gene_Symbol_Encoded', 
-                                                      format_func=lambda x : f"{gene_id_label_dd[str(x)]}"
-                                                    )
+    # print(type(gene_dd_option))
+    # print(type(gene_id_label_dd[gene_dd_option[0]]))
+    ui_vals['Gene_Symbol_Encoded'] = int(st.selectbox('Select Gene:', options=gene_dd_option, key='Gene_Symbol_Encoded', 
+                                                      format_func=lambda x : f"{gene_id_label_dd[str(x)]}"))
     
     mutation_type = st.radio("Mutation Type:", options=["SNP (Single Nucleotide Polymorphism)", "INDEL (Insertion/Deletion)"], index=1)
 
@@ -102,7 +101,7 @@ if submit_btn:
         # print(ui_vals)
         df = pd.DataFrame([ui_vals])
         # st.dataframe(df)
-        
+        # print(df.info())
         ##** Classifier Model Integration **##
         classifier_model = load_model(path=config.__MODEL_PATH__, 
                                       model_file_name=config.__MODEL_LIST__[selected_model]['model_name'])
@@ -114,13 +113,17 @@ if submit_btn:
             
             display_df = df.copy()
             rename_col = {}
-            for col in display_df.columns:
-                rename_col[col] = config.__FEATURE_COLUMNS_DEFAULTS__[col]['out_df_label']
 
+            for col in display_df.columns:
+                if 'map_name' in config.__FEATURE_COLUMNS_DEFAULTS__[col]:
+                    display_df[col] = config.json_maps[config.__FEATURE_COLUMNS_DEFAULTS__[col]['map_name']][df[col][0].astype(str)]
+                elif 'radio' in config.__FEATURE_COLUMNS_DEFAULTS__[col]:
+                    display_df[col] = 'Yes' if df[col][0] else 'No'
+                rename_col[col] = config.__FEATURE_COLUMNS_DEFAULTS__[col]['out_df_label']
             display_df.rename(columns=rename_col, inplace=True)
+
             display_df[config.__PREDICTION__] = prediction
-            label_map = config.json_maps['sig_label_map']
-            display_df[config.__CLINICAL_SIGNIFIANCE__] = [key for key, value in label_map.items() if value == prediction]
+            display_df[config.__CLINICAL_SIGNIFIANCE__] = sig_label_map[str(prediction[0])]
             
             if probabilities is not None:
                 display_df[config.__PROBABILITY__] = probabilities.max(axis=1)
