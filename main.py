@@ -133,21 +133,20 @@ if submit_btn:
             st.success(f"{config.__MESSAGE__['PREDICTION_SUCCESS']} {config.__MODEL_LIST__[selected_model]['name']} model")
             st.dataframe(display_df.T.astype(str))
 
-
-            lookup_df = pd.read_csv('~/Downloads/proj_data/disease_name_lookup.tsv', sep='\t', low_memory=False)
-            ##** Disease name look up **##
-            if display_df[config.__CLINICAL_SIGNIFIANCE__][0].lower() in ['pathogenic', 'likely_pathogenic']:
-                # print(display_df['Gene Symbol'][0])
-                # print(df.info())
-                results = get_top_diseases(lookup_df, display_df['Gene Symbol'][0], df['IS_INDEL'][0])
-                disease_text = ", ".join([d['disease'] for d in results])
-                # print(results)
-                st.markdown(f"**Prediction:** Pathogenic\n\n**Probable disease(s):** {disease_text}")
-            elif display_df[config.__CLINICAL_SIGNIFIANCE__][0].lower() in ['benign', 'likely_benign']:
-                st.markdown(f"**Prediction:** Benign\n\n_No disease association shown — predicted benign._")
-            else:
-                diseases = get_top_diseases(lookup_df, display_df['Gene Symbol'][0], df['IS_INDEL'][0])
-                st.markdown(f"**Prediction:** Uncertain\n\n_ClinVar reference:_ {', '.join([d['disease'] for d in diseases])} (reference only)")
+            ##** Disease name look up (Too large file) **##
+            # lookup_df = pd.read_csv('~/Downloads/proj_data/disease_name_lookup.tsv', sep='\t', low_memory=False)
+            # if display_df[config.__CLINICAL_SIGNIFIANCE__][0].lower() in ['pathogenic', 'likely_pathogenic']:
+            #     # print(display_df['Gene Symbol'][0])
+            #     # print(df.info())
+            #     results = get_top_diseases(lookup_df, display_df['Gene Symbol'][0], df['IS_INDEL'][0])
+            #     disease_text = ", ".join([d['disease'] for d in results])
+            #     # print(results)
+            #     st.markdown(f"**Prediction:** Pathogenic\n\n**Probable disease(s):** {disease_text}")
+            # elif display_df[config.__CLINICAL_SIGNIFIANCE__][0].lower() in ['benign', 'likely_benign']:
+            #     st.markdown(f"**Prediction:** Benign\n\n_No disease association shown — predicted benign._")
+            # else:
+            #     diseases = get_top_diseases(lookup_df, display_df['Gene Symbol'][0], df['IS_INDEL'][0])
+            #     st.markdown(f"**Prediction:** Uncertain\n\n_ClinVar reference:_ {', '.join([d['disease'] for d in diseases])} (reference only)")
 
             ##** dspy integration **##
             dspy_config = config.dspy_config
