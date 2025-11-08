@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import config, joblib, traceback, dspy, json, os, sys
 from user_dspy_llm import user_dspy_llm
-from helper import df_to_json, format_output, load_json_for_dd
+from helper import df_to_json, format_output
+from disease_name_lookup import get_top_diseases
 
 logger = config.logging.getLogger(__name__)
 
@@ -11,7 +12,6 @@ st.title(config.__PAGE_TITLE__)
 
 st.sidebar.header(config.__SIDEBAR_TITLE__)
 # st.header(config.__SIDEBAR_TITLE__)
-
 
 st.markdown("""
     <style>
@@ -80,7 +80,7 @@ with st.sidebar.form(config.__FORM_NAME__, width=500):
     # print(type(gene_dd_option))
     # print(type(gene_id_label_dd[gene_dd_option[0]]))
     ui_vals['Gene_Symbol_Encoded'] = int(st.selectbox('Select Gene:', options=gene_dd_option, key='Gene_Symbol_Encoded', 
-                                                      format_func=lambda x : f"{gene_id_label_dd[str(x)]}"))
+                                                      format_func=lambda x : f"{gene_id_label_dd[str(x)]} ({x})"))
     
     mutation_type = st.radio("Mutation Type:", options=["SNP (Single Nucleotide Polymorphism)", "INDEL (Insertion/Deletion)"], index=1)
 
@@ -109,6 +109,8 @@ if submit_btn:
             raise Exception(config.__MESSAGE__['MODEL_NOT_LOADED'])
         else:
             prediction = classifier_model.predict(df)
+            # print(df)
+            # print(prediction)
             probabilities = classifier_model.predict_proba(df) if hasattr(classifier_model, "predict_proba") else None
             
             display_df = df.copy()
@@ -130,6 +132,22 @@ if submit_btn:
 
             st.success(f"{config.__MESSAGE__['PREDICTION_SUCCESS']} {config.__MODEL_LIST__[selected_model]['name']} model")
             st.dataframe(display_df.T.astype(str))
+
+
+            lookup_df = pd.read_csv('~/Downloads/proj_data/disease_name_lookup.tsv', sep='\t', low_memory=False)
+            ##** Disease name look up **##
+            if display_df[config.__CLINICAL_SIGNIFIANCE__][0].lower() in ['pathogenic', 'likely_pathogenic']:
+                # print(display_df['Gene Symbol'][0])
+                # print(df.info())
+                results = get_top_diseases(lookup_df, display_df['Gene Symbol'][0], df['IS_INDEL'][0])
+                disease_text = ", ".join([d['disease'] for d in results])
+                # print(results)
+                st.markdown(f"**Prediction:** Pathogenic\n\n**Probable disease(s):** {disease_text}")
+            elif display_df[config.__CLINICAL_SIGNIFIANCE__][0].lower() in ['benign', 'likely_benign']:
+                st.markdown(f"**Prediction:** Benign\n\n_No disease association shown — predicted benign._")
+            else:
+                diseases = get_top_diseases(lookup_df, display_df['Gene Symbol'][0], df['IS_INDEL'][0])
+                st.markdown(f"**Prediction:** Uncertain\n\n_ClinVar reference:_ {', '.join([d['disease'] for d in diseases])} (reference only)")
 
             ##** dspy integration **##
             dspy_config = config.dspy_config
