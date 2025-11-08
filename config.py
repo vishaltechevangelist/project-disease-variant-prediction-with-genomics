@@ -119,10 +119,11 @@ dspy_config = {
                 2. Then add **2 bullet points** (each one short sentence) that explain *why* in everyday terms:
                     - Mention whether it’s a **single-letter change (SNP)** or **insertion/deletion (INDEL)**.
                     - Explain only from the provided data — do **not invent** new biology facts.
-                3. End with a **single closing sentence** suggesting a non-prescriptive next step, such as:
+                3. Parse disease json list have disease name, number of submission, count of evidence, review status and explain in simole terma  
+                4. End with a **single closing sentence** suggesting a non-prescriptive next step, such as:
                     - “If you are concerned, you can share this report with a clinician.”
                     - “This result is mostly reassuring but always best discussed with a professional.”
-                4. Use a warm, informative tone — short words, active voice, no jargon.
-                5. Output text contains short paragraph for user then why in bullets section and then next step having suggestion
+                5. Use a warm, informative tone — short words, active voice, no jargon.
+                6. Output text contains short paragraph for user then why in bullets section and then next step having suggestion
                 """,
 }
