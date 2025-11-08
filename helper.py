@@ -1,4 +1,5 @@
 import numpy as np
+import json, os
 
 def df_to_json(df):
     json_str = {}
@@ -17,3 +18,7 @@ def df_to_json(df):
 
 def format_output(display_output):
     return f'<div style="background-color:#2b6cb0;color:white;border-left:6px solid #2196F3;padding:10px 16px;border-radius:8px;">{display_output}</div>'
+
+def load_json_for_dd(path, filename):
+    with open(os.path.join(path, filename), 'r') as f:
+        return json.load(f)
