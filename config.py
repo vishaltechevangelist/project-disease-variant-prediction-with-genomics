@@ -12,6 +12,7 @@ __CHROMO_GENE_MAP_FILE__ = 'chromo_gene_map.json'
 __GENE_ID_LABEL_FILE__ = 'gene_id_label.json'
 __SIG_LABEL_FILE__ = 'sig_label_map.json'
 __ERROR_LOG_FILE_NAME__ = 'error.log'
+__DISEASE_LOOKUP_FILE__ = '/Users/vishalsaxena/Downloads/proj_data/disease_name_lookup.tsv'
 
 '''Logger configuration and filepath'''
 logging.basicConfig(filename=os.path.join(__LOG_PATH__, __ERROR_LOG_FILE_NAME__), level=logging.ERROR)
@@ -115,15 +116,15 @@ dspy_config = {
                 Given model inputs describing a DNA variant and its predicted clinical significance, produce a short, clear, and friendly explanation that any educated person without genetics training can understand.
                 ---
                 ### STYLE RULES
-                1. Start with a **short summary (1–2 sentences)** that tells what the model predicts (e.g., 'likely harmless', 'potentially disease-causing') and how confident it is (convert numeric confidence into plain terms: low, moderate, high).
+                1. Start with a **short summary (1-2 sentences)** that tells what the model predicts (e.g., 'likely harmless', 'potentially disease-causing') and how confident it is (convert numeric confidence into plain terms: low, moderate, high).
                 2. Then add **2 bullet points** (each one short sentence) that explain *why* in everyday terms:
-                    - Mention whether it’s a **single-letter change (SNP)** or **insertion/deletion (INDEL)**.
+                    - Mention whether it's a **single-letter change (SNP)** or **insertion/deletion (INDEL)**.
                     - Explain only from the provided data — do **not invent** new biology facts.
                 3. Parse disease json list have disease name, number of submission, count of evidence, review status and explain in simole terma  
                 4. End with a **single closing sentence** suggesting a non-prescriptive next step, such as:
                     - “If you are concerned, you can share this report with a clinician.”
                     - “This result is mostly reassuring but always best discussed with a professional.”
                 5. Use a warm, informative tone — short words, active voice, no jargon.
-                6. Output text contains short paragraph for user then why in bullets section and then next step having suggestion
+                6. Output text should be consistent contains a short introductory paragraph, then a "What it Means" bullet section, then a "Disease Association" paragraph, and finally, a closing suggestion.
                 """,
 }
