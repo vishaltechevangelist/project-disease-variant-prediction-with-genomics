@@ -22,3 +22,34 @@ def format_output(display_output):
 def load_json_for_dd(path, filename):
     with open(os.path.join(path, filename), 'r') as f:
         return json.load(f)
+    
+def combine_disease_data_for_llm(disease_list):
+    """
+    Combines the list of disease dictionaries into a single, clean markdown string
+    for easy consumption by the LLM.
+
+    The primary disease (highest score) is highlighted, and others are listed as minor findings.
+    """
+    if not disease_list:
+        return "No associated disease data found in the lookup database."
+
+    # Assume the list is already sorted by score (as per get_top_diseases logic)
+    main_disease = disease_list[0]
+    other_diseases = disease_list[1:]
+
+    # Start with the main finding
+    output_str = "### Clinical Context from Reference Databases\n"
+    output_str += (
+        f"The top probable disease is **{main_disease['disease']}** (Score: {main_disease['score']}). "
+        f"This disease is supported by {main_disease['pathogenic_submissions']} pathogenic submissions "
+        f"and {main_disease['freq']} total records. "
+        f"Review statuses include: {', '.join(set(main_disease['review_statuses']))}.\n"
+    )
+
+    # List secondary findings if they exist
+    if other_diseases:
+        output_str += "\nOther diseases found in the database (minor findings):\n"
+        for d in other_diseases:
+            output_str += f"- {d['disease']} (Score: {d['score']}, Submissions: {d['pathogenic_submissions']})\n"
+    
+    return output_str

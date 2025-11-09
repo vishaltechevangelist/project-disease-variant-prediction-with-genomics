@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 import config, joblib, traceback, dspy, json, os, sys
-from user_dspy_llm import user_dspy_llm
-from helper import df_to_json, format_output
+# from dspy_cot import user_dspy_llm
+from dspy_prediction import user_dspy_llm
+from helper import df_to_json, format_output, combine_disease_data_for_llm
 from disease_name_lookup import get_top_diseases
 
 logger = config.logging.getLogger(__name__)
@@ -23,6 +24,15 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+@st.cache_data
+def load_disease_lookup_data(filepath):
+    try:
+        # Assuming the file is accessible in the environment
+        return pd.read_csv(filepath, sep='\t', low_memory=False)
+    except Exception:
+        logger.warning(f"Disease lookup file not found at {filepath}. Disease context will be skipped.")
+        return None
+
 @st.cache_resource
 def load_model(path=config.__MODEL_PATH__, model_file_name=config.__MODEL_FILE_NAME__):
     try:
@@ -35,7 +45,8 @@ def load_model(path=config.__MODEL_PATH__, model_file_name=config.__MODEL_FILE_N
 @st.cache_resource
 def get_configured_dspy_llm():
     try:
-        llm = dspy.LM(model='gemini/gemini-2.0-flash', api_key=st.secrets["GOOGLE_API_KEY"])
+        llm = dspy.LM(model=config.dspy_config['LM_NAME'], api_key=st.secrets["GOOGLE_API_KEY"])
+        # llm = dspy.OpenAI(model='gpt-3.5-turbo', api_key=st.secrets["OPENAI_API_KEY"]) 
         dspy.settings.configure(lm=llm)
     except Exception as e:
         logger.exception("Error occurred: %s", e, exc_info=True)
@@ -127,34 +138,48 @@ if submit_btn:
             display_df[config.__PREDICTION__] = prediction
             display_df[config.__CLINICAL_SIGNIFIANCE__] = sig_label_map[str(prediction[0])]
             
+            confidence = "N/A"
             if probabilities is not None:
-                display_df[config.__PROBABILITY__] = probabilities.max(axis=1)
+                confidence = probabilities.max(axis=1)[0]
+                display_df[config.__PROBABILITY__] = f"{confidence:.2f}"
 
             st.success(f"{config.__MESSAGE__['PREDICTION_SUCCESS']} {config.__MODEL_LIST__[selected_model]['name']} model")
             st.dataframe(display_df.T.astype(str))
 
-            ##** Disease name look up (Too large file) **##
-            # lookup_df = pd.read_csv('~/Downloads/proj_data/disease_name_lookup.tsv', sep='\t', low_memory=False)
-            # if display_df[config.__CLINICAL_SIGNIFIANCE__][0].lower() in ['pathogenic', 'likely_pathogenic']:
-            #     # print(display_df['Gene Symbol'][0])
-            #     # print(df.info())
-            #     results = get_top_diseases(lookup_df, display_df['Gene Symbol'][0], df['IS_INDEL'][0])
-            #     disease_text = ", ".join([d['disease'] for d in results])
-            #     # print(results)
-            #     st.markdown(f"**Prediction:** Pathogenic\n\n**Probable disease(s):** {disease_text}")
-            # elif display_df[config.__CLINICAL_SIGNIFIANCE__][0].lower() in ['benign', 'likely_benign']:
-            #     st.markdown(f"**Prediction:** Benign\n\n_No disease association shown — predicted benign._")
-            # else:
-            #     diseases = get_top_diseases(lookup_df, display_df['Gene Symbol'][0], df['IS_INDEL'][0])
-            #     st.markdown(f"**Prediction:** Uncertain\n\n_ClinVar reference:_ {', '.join([d['disease'] for d in diseases])} (reference only)")
+            ##** Disease name look up (Integrate with DSPy) **##
+            lookup_df = load_disease_lookup_data(config.__DISEASE_LOOKUP_FILE__)
+            
+            clinical_context_text = "No associated disease data found in the lookup database."
+            
+            # Only perform lookup if lookup data is available AND prediction is pathogenic/likely pathogenic
+            if lookup_df is not None and display_df[config.__CLINICAL_SIGNIFIANCE__][0].lower() in ['pathogenic', 'likely_pathogenic']:
+                # The Gene Symbol is now in display_df, and IS_INDEL is still in df
+                gene_symbol = display_df['Gene Symbol'][0]
+                is_indel = df['IS_INDEL'][0]
 
+                # Get the structured list of disease dictionaries
+                disease_results = get_top_diseases(lookup_df, gene_symbol, is_indel)
+                
+                # Convert the structured list into a clean string for the LLM
+                clinical_context_text = combine_disease_data_for_llm(disease_results)
+            
             ##** dspy integration **##
             dspy_config = config.dspy_config
             user_dspy_llm = user_dspy_llm(dspy=dspy, lmname=dspy_config['LM_NAME'], lm_api_key=st.secrets[dspy_config['LM_KEY_NAME']], 
-                                          signature=dspy_config['SIGNATURE'], instruction = dspy_config['LLM_ROLE_GOAL_INSTRUCTION'])
+                                        #   signature=dspy_config['SIGNATURE'], instruction = dspy_config['LLM_ROLE_GOAL_INSTRUCTION']
+                                          )
             llm = get_configured_dspy_llm()
-            # user_dspy_llm.dspy_configure_lm()
-            output_explanation = user_dspy_llm.get_prediction_explanation(df_to_json(display_df))
+            
+            # 1. Create consolidated input for prediction and confidence
+            # model_prediction_input = f"Prediction: {display_df[config.__CLINICAL_SIGNIFIANCE__][0]} | Confidence: {confidence}"
+            
+            # 2. Call DSPy with the new signature: input_features, clinical_context -> ...
+            output_explanation = user_dspy_llm.get_prediction_explanation(
+                input_features=df_to_json(display_df),
+                clinical_context=clinical_context_text,
+                instruction=dspy_config['LLM_ROLE_GOAL_INSTRUCTION']
+            )
+            
             st.subheader(config.__MESSAGE__['HEADING_FOR_LLMTEXT'])
             st.markdown(format_output(output_explanation), unsafe_allow_html=True)
 
