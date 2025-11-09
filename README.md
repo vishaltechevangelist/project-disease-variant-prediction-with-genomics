@@ -1,73 +1,81 @@
-# 🧬 Disease Variant Prediction with Genomics
+# 🧬 Genome-Dx  
+### AI-powered Disease Prediction from Gene Mutations  
 
-### 🔍 Project Overview
-This ongoing project aims to build a **machine learning pipeline to predict the clinical significance of genomic variants** using publicly available **ClinVar** and **VCF** (Variant Call Format) data.  
-The primary goal is to analyze DNA variant information and identify potential **pathogenic (disease-causing) mutations** to support healthcare and precision medicine research.
-
----
-
-### ⚙️ Technologies Used
-- **Programming:** Python  
-- **Libraries:** Pandas, NumPy, scikit-learn, TensorFlow/Keras  
-- **Genomic Tools:** cyvcf2 (for parsing VCF files)  
-- **Data Source:** ClinVar (NCBI)  
-- **Environment:** Anaconda, Jupyter Notebook  
+Genome-Dx is a genomics-driven machine learning project that predicts the **pathogenicity** (benign / pathogenic / uncertain) of gene mutations  
+and provides **probable disease associations** with **LLM-generated explanations** for better interpretability.  
 
 ---
 
-### 🧩 Project Workflow
-1. **Data Acquisition**
-   - Download and parse ClinVar `.vcf.gz` files containing genomic variant details.  
-   - Extract metadata such as chromosome, position, reference and alternate alleles, and gene symbol.
-
-2. **Data Preprocessing & Cleaning**
-   - Handle missing values and inconsistent genomic attributes.  
-   - Map chromosome and clinical significance labels for supervised learning.  
-
-3. **Feature Engineering**
-   - Derive biologically meaningful features such as:
-     - Chromosome mapping (categorical → numerical)
-     - Gene frequency count
-     - Allele-type variations  
-   - Evaluate importance and correlation of each feature.
-
-4. **Model Development**
-   - Train baseline ML models (Random Forest, Decision Tree).  
-   - Implement **Neural Network** (Keras) with **EarlyStopping** for better generalization.  
-   - Compare traditional ML vs NN performance using classification metrics.
-
-5. **Model Evaluation**
-   - Use metrics such as **Precision, Recall, F1-Score**, and **Confusion Matrix**.  
-   - Analyze model interpretability and biological relevance.
-
-6. **Next Steps (Ongoing)**
-   - Integrate variant effect prediction with external annotation datasets.  
-   - Deploy scalable prediction API or web dashboard for genomic interpretation.
+## 🚀 Project Overview
+| Component | Description |
+|------------|--------------|
+| **Objective** | Predict whether a gene mutation is *pathogenic* or *benign* and infer the most probable disease association. |
+| **ML Model** | Supervised classification model trained on encoded genomic features: `Chromosome_Encoded`, `Gene_Symbol_Encoded`, `IS_SNP`, `IS_INDEL`. |
+| **LLM Integration** | Uses **Gemini LLM** through **DSPy** to generate natural-language reasoning and human-readable explanation text. |
+| **Data Source** | Processed ClinVar-derived dataset (gene mutations, clinical significance, and disease annotations). |
+| **Interface** | Streamlit app for interactive prediction, explanation, and variant lookup. |
 
 ---
 
-### 📊 Sample Output
-```text
-Classification Report (Neural Network with EarlyStopping)
+## ⚙️ Workflow
 
-              precision    recall  f1-score   support
-           0     0.47       0.77      0.58    253225
-           1     0.82       0.43      0.56    387994
-           2     0.64       0.66      0.65     88450
+```
+Raw ClinVar Data  
+   ↓  
+Preprocessing → Encoding (chromosome, gene, variant type)  
+   ↓  
+ML Model Training (Pathogenic vs Benign)  
+   ↓  
+Prediction  
+   ↓  
+LLM + Lookup Integration → Explanation + Probable Disease  
+   ↓  
+Streamlit UI Display
+```
+
+---
+
+## 🧩 Features
+- 🧠 **ML-based Pathogenicity Prediction** — trained on numeric genomic features.  
+- 🔍 **Probable Disease Lookup** — gene-level and variant-level mapping using ClinVar disease names.  
+- 💬 **LLM-Generated Explanations** — contextual text via Gemini + DSPy for interpretability.  
+- 🧾 **Hybrid Results** — combines deterministic lookup with AI reasoning.  
+- 🌐 **Streamlit Interface** — user-friendly input/output layout for experimentation.
+
+---
+
+## 📊 Tools & Technologies
+| Category | Stack |
+|-----------|--------|
+| **Language** | Python 3.10 |
+| **Frameworks** | scikit-learn, pandas, numpy |
+| **LLM / AI** | Google Gemini LLM + DSPy |
+| **Visualization / UI** | Streamlit |
+| **Data Handling** | joblib, csv, numpy |
+| **Version Control** | Git / GitHub |
+
+---
+
+## 🧠 Future Extensions
+- Integrate **Qdrant / FAISS** for semantic disease retrieval.  
+- Add **multi-task model** to jointly predict disease + pathogenicity.  
+- Include **phenotype and clinical notes** for richer context.  
+- Expand dataset with **OMIM / HPO mappings** for rare diseases.  
+
+---
+
+## 🧬 Example Output
+**Input:** Gene = BRCA1, IS_INDEL = 1  
+**Model Prediction:** Pathogenic  
+**Probable Disease:** Hereditary breast and ovarian cancer  
+**Explanation:**  
+> Based on ClinVar and model inference, this mutation in *BRCA1* is classified as pathogenic and is most frequently associated with hereditary breast and ovarian cancer (HBOC).
+
+---
+
+## 🧾 License
+This project is released for educational and research use.  
+© 2025 Vishal Saxena  
 
 
-
-
-
-
-
-
-1. conda create -n genomics python=3.10 -y
-2. conda activate genomics
-3. conda install -c conda-forge numpy pandas scikit-learn matplotlib seaborn
-4. conda install pytorch torchvision torchaudio -c pytorch -c conda-forge
-5. conda install -c bioconda cyvcf2 pyfaidx biopython
-6. pip install transformers datasets sentencepiece
-
-
-bcftools view clinvar_20250923.vcf -Ov -o cleaned.vcf
+**Genome-Dx** — *bridging genomics and AI to explain disease risk from gene mutations.*
