@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 import config, joblib, traceback, dspy, json, os, sys
 # from dspy_cot import user_dspy_llm
-from dspy_prediction import user_dspy_llm
-from helper import df_to_json, format_output, combine_disease_data_for_llm
-from disease_name_lookup import get_top_diseases
+from classes.dspy_prediction import user_dspy_llm
+from helpers.helper import df_to_json, format_output, combine_disease_data_for_llm
+from helpers.disease_name_lookup import get_top_diseases
 
 logger = config.logging.getLogger(__name__)
 
