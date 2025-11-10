@@ -73,6 +73,11 @@ Streamlit UI Display
 
 ---
 
+**Models & Embeddings**
+- `pritamdeka/S-BioBERT-snli-stsb` – biomedical sentence embeddings (CC BY-NC 3.0)
+- `sentence-transformers` – base embedding framework (Apache 2.0)
+- `Qdrant` – vector database for semantic search (Apache 2.0)
+
 ## 🧾 License
 This project is released for educational and research use.  
 © 2025 Vishal Saxena  

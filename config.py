@@ -1,5 +1,5 @@
 import os, logging
-from helper import load_json_for_dd
+from helpers.helper import load_json_for_dd
 
 ''' Application related configuration'''
 __APP_PATH__ = os.getcwd()
@@ -128,3 +128,9 @@ dspy_config = {
                 6. Output text should be consistent contains a short introductory paragraph, then a "What it Means" bullet section, then a "Disease Association" paragraph, and finally, a closing suggestion.
                 """,
 }
+
+'''Embedding model & QDrant configs'''
+__EMBEDDING_MODEL__ = 'pritamdeka/S-BioBERT-snli-stsb' 
+__EMBEDDING_COLLECTION_NAME__ = 'GenomeDx'
+
+

@@ -5,3 +5,10 @@ scikit-learn
 xgboost
 joblib
 dspy
+sentence_transformers
+transformers>=4.35.0
+torch>=2.6.0 # required for BioPert model
+safetensors
+qdrant-client
+pillow
+requests
