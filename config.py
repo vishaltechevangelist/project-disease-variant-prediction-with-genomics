@@ -75,7 +75,7 @@ __FEATURE_COLUMNS_DEFAULTS__ = {
     }
 }
 
-__PAGE_TITLE__ = 'Disease Predictor from Genomics Change'
+__PAGE_TITLE__ = 'GenomeDx: Genomics meets AI'
 __SIDEBAR_TITLE__ = 'Genetic Input Features'
 __FORM_NAME__ = 'genetic_input_feature'
 
