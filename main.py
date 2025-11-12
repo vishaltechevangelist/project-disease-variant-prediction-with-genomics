@@ -9,6 +9,21 @@ from helpers.helper import df_to_json, format_output, combine_disease_data_for_l
 from helpers.disease_name_lookup import get_top_diseases
 from sentence_transformers import SentenceTransformer
 
+try:
+    import torch
+    if torch.backends.mps.is_available():
+        DEVICE = 'mps' # Use Apple Silicon GPU (fastest option for your Mac)
+        print("Using Apple Silicon (MPS) GPU for fastest encoding.")
+    elif torch.cuda.is_available():
+        DEVICE = 'cuda' # For non-Mac/NVIDIA GPUs
+        print("Using CUDA GPU for encoding.")
+    else:
+        DEVICE = 'cpu' # Fallback
+        print("Using CPU for encoding (consider installing PyTorch with MPS/CUDA support).")
+except ImportError:
+    DEVICE = 'cpu'
+    print("Warning: PyTorch not imported. Encoding will run on CPU.")
+
 logger = config.logging.getLogger(__name__)
 
 st.set_page_config(page_title=config.__PAGE_TITLE__, layout="wide")
@@ -153,7 +168,7 @@ if submit_btn:
             # st.dataframe(display_df)
             if str(display_df[config.__CLINICAL_SIGNIFIANCE__][0]).lower() == config.__HARMFUL_DISEASE_LABEL__:
                 ##** Generate embedding vector for search qdrant points **##
-                embedding_generator_obj = embedding_generator(SentenceTransformer, config.__EMBEDDING_MODEL__, 'mps')
+                embedding_generator_obj = embedding_generator(SentenceTransformer, config.__EMBEDDING_MODEL__, DEVICE)
                 variant_type = 'INDEL' if (df['IS_INDEL'][0] == 1 or df['IS_INDEL'][0] == True) else 'SNP'
                 query_vector_input = (f"ClinVar record for gene {display_df['Gene Symbol'][0]} ({variant_type} at position \
                                     {display_df['Chromosome'][0]}) is classified as {display_df[config.__CLINICAL_SIGNIFIANCE__][0]}. ")
