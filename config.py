@@ -1,4 +1,4 @@
-import os, logging
+import os, logging, sys
 from helpers.helper import load_json_for_dd
 
 ''' Application related configuration'''
@@ -102,6 +102,7 @@ __MODEL_LIST__ = {
 __PREDICTION__ = 'Prediction'
 __CLINICAL_SIGNIFIANCE__ =  'Clinical Significance'
 __PROBABILITY__ = 'Confidence'
+__HARMFUL_DISEASE_LABEL__ = 'pathogenic'
 
 '''dspy configuration'''
 dspy_config = {
@@ -130,7 +131,8 @@ dspy_config = {
 }
 
 '''Embedding model & QDrant configs'''
-__EMBEDDING_MODEL__ = 'pritamdeka/S-BioBERT-snli-stsb' 
+# __EMBEDDING_MODEL__ = 'pritamdeka/S-BioBERT-snli-stsb'
+__EMBEDDING_MODEL__ = 'pritamdeka/S-BioBert-snli-multinli-stsb' 
 __EMBEDDING_COLLECTION_NAME__ = 'GenomeDx'
 
 

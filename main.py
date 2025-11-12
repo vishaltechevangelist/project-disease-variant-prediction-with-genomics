@@ -1,10 +1,13 @@
 import streamlit as st
 import pandas as pd
-import config, joblib, traceback, dspy, json, os, sys
+import config, joblib, traceback, dspy, json, os, sys, qdrant_client
 # from dspy_cot import user_dspy_llm
 from classes.dspy_prediction import user_dspy_llm
+from classes.vector_db import vector_db
+from classes.embedding_generator import embedding_generator
 from helpers.helper import df_to_json, format_output, combine_disease_data_for_llm
 from helpers.disease_name_lookup import get_top_diseases
+from sentence_transformers import SentenceTransformer
 
 logger = config.logging.getLogger(__name__)
 
@@ -146,37 +149,38 @@ if submit_btn:
             st.success(f"{config.__MESSAGE__['PREDICTION_SUCCESS']} {config.__MODEL_LIST__[selected_model]['name']} model")
             st.dataframe(display_df.T.astype(str))
 
-            ##** Disease name look up (Integrate with DSPy) **##
-            lookup_df = load_disease_lookup_data(config.__DISEASE_LOOKUP_FILE__)
-            
-            clinical_context_text = "No associated disease data found in the lookup database."
-            
-            # Only perform lookup if lookup data is available AND prediction is pathogenic/likely pathogenic
-            if lookup_df is not None and display_df[config.__CLINICAL_SIGNIFIANCE__][0].lower() in ['pathogenic', 'likely_pathogenic']:
-                # The Gene Symbol is now in display_df, and IS_INDEL is still in df
-                gene_symbol = display_df['Gene Symbol'][0]
-                is_indel = df['IS_INDEL'][0]
+            # st.dataframe(df)
+            # st.dataframe(display_df)
+            if str(display_df[config.__CLINICAL_SIGNIFIANCE__][0]).lower() == config.__HARMFUL_DISEASE_LABEL__:
+                ##** Generate embedding vector for search qdrant points **##
+                embedding_generator_obj = embedding_generator(SentenceTransformer, config.__EMBEDDING_MODEL__, 'mps')
+                variant_type = 'INDEL' if (df['IS_INDEL'][0] == 1 or df['IS_INDEL'][0] == True) else 'SNP'
+                query_vector_input = (f"ClinVar record for gene {display_df['Gene Symbol'][0]} ({variant_type} at position \
+                                    {display_df['Chromosome'][0]}) is classified as {display_df[config.__CLINICAL_SIGNIFIANCE__][0]}. ")
+                query_vector = embedding_generator_obj.get_embedding(query_vector_input)
 
-                # Get the structured list of disease dictionaries
-                disease_results = get_top_diseases(lookup_df, gene_symbol, is_indel)
-                
-                # Convert the structured list into a clean string for the LLM
-                clinical_context_text = combine_disease_data_for_llm(disease_results)
-            
-            ##** dspy integration **##
+                ##** Qdrant lookup (majorly lookup in database) **##
+                vector_db_host = st.secrets['QDRANT_HOST']
+                vector_db_key = st.secrets['QDRANT_KEY']
+                collection_name = config.__EMBEDDING_COLLECTION_NAME__
+                vector_db_obj = vector_db(qdrant_client.QdrantClient(url=vector_db_host, api_key=vector_db_key), 
+                                        collection_name=collection_name,
+                                        point_obj=False)
+                results = vector_db_obj.search(query_vector=query_vector, limit=1, with_payload=True)
+                for data in results:
+                    clinical_context = data.payload
+                # print(clinical_context)
+            else:
+                clinical_context = display_df.to_dict()    
+            ##** dspy + gemini integration ** ##
             dspy_config = config.dspy_config
             user_dspy_llm = user_dspy_llm(dspy=dspy, lmname=dspy_config['LM_NAME'], lm_api_key=st.secrets[dspy_config['LM_KEY_NAME']], 
                                         #   signature=dspy_config['SIGNATURE'], instruction = dspy_config['LLM_ROLE_GOAL_INSTRUCTION']
                                           )
             llm = get_configured_dspy_llm()
-            
-            # 1. Create consolidated input for prediction and confidence
-            # model_prediction_input = f"Prediction: {display_df[config.__CLINICAL_SIGNIFIANCE__][0]} | Confidence: {confidence}"
-            
-            # 2. Call DSPy with the new signature: input_features, clinical_context -> ...
             output_explanation = user_dspy_llm.get_prediction_explanation(
                 input_features=df_to_json(display_df),
-                clinical_context=clinical_context_text,
+                clinical_context=clinical_context,
                 instruction=dspy_config['LLM_ROLE_GOAL_INSTRUCTION']
             )
             
