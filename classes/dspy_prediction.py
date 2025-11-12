@@ -3,7 +3,8 @@ import dspy
 class PredictionExplanation(dspy.Signature):
     input_features = dspy.InputField(desc="JSON string containing the variant features and model prediction/confidence.")
     instruction = dspy.InputField(desc="JSON string containing the instruction to llm regarding role, goal and style rules to display text")
-    clinical_context = dspy.InputField(desc="A pre-formatted Markdown string containing associated disease data from clinical databases.")
+    clinical_context = dspy.InputField(desc="A JSON string containing Chormosome, Gene Symbol, Clinical Significance, Clinical Review Status, \
+                                       Clinical disease name important keys for context")
     model_prediction_explanation = dspy.OutputField(desc="A detailed, layman-friendly explanation following all style rules.")
 
 
