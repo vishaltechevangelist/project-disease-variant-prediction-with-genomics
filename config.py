@@ -106,8 +106,10 @@ __HARMFUL_DISEASE_LABEL__ = 'pathogenic'
 
 '''dspy configuration'''
 dspy_config = {
-    'LM_NAME' : 'gemini/gemini-2.0-flash',
-    'LM_KEY_NAME' : 'GOOGLE_API_KEY',
+    # 'LM_NAME' : 'gemini/gemini-2.0-flash',
+    # 'LM_KEY_NAME' : 'GOOGLE_API_KEY',
+    'LM_NAME' : 'groq/llama-3.1-8b-instant',
+    'LM_KEY_NAME' : 'GROQ_API_KEY',
     'SIGNATURE' : "input_features -> model_prediction_explanation",
     'LLM_ROLE_GOAL_INSTRUCTION' : """
                 ### ROLE

@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import config, joblib, traceback, dspy, json, os, sys, qdrant_client
+import config, joblib, traceback, dspy, json, os, sys, qdrant_client, litellm
 # from dspy_cot import user_dspy_llm
 from classes.dspy_prediction import user_dspy_llm
 from classes.vector_db import vector_db
@@ -60,11 +60,14 @@ def load_model(path=config.__MODEL_PATH__, model_file_name=config.__MODEL_FILE_N
         st.error(config.__MESSAGE__['MODEL_NOT_LOADED'])
         return None
 
+# os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
+
 @st.cache_resource
 def get_configured_dspy_llm():
     try:
-        llm = dspy.LM(model=config.dspy_config['LM_NAME'], api_key=st.secrets["GOOGLE_API_KEY"])
+        # llm = dspy.LM(model=config.dspy_config['LM_NAME'], api_key=st.secrets["GOOGLE_API_KEY"])
         # llm = dspy.OpenAI(model='gpt-3.5-turbo', api_key=st.secrets["OPENAI_API_KEY"]) 
+        llm = dspy.LM(model=config.dspy_config['LM_NAME'], api_key=st.secrets["GROQ_API_KEY"])
         dspy.settings.configure(lm=llm)
     except Exception as e:
         logger.exception("Error occurred: %s", e, exc_info=True)
